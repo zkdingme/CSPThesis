@@ -1,7 +1,7 @@
 % 设置 biblatex 额外选项
 % \PassOptionsToPackage{gbpub=false, gbtype=false}{biblatex}
 
-\documentclass[degree=course, language=english, openright, twoside]{sjtuthesis}
+\documentclass[degree=course, language=chinese]{sjtuthesis}
 % 选项
 %   degree=[doctor|master|bachelor|course],     % 必选，学位类型
 %   language=[chinese|english],                 % 可选（默认：chinese），论文的主要语言
@@ -31,8 +31,6 @@
 
 % 无编号内容：中英文论文封面、授权页
 \maketitle
-\makeDeclareOriginality[pdf/originality.pdf]
-\makeDeclareAuthorization
 
 % 使用罗马数字对前言编号
 \frontmatter
@@ -46,44 +44,22 @@
 \listoftables
 \listofalgorithms
 
-% 主要符号、缩略词对照表
-\input{tex/nomenclature}
 
 % 使用阿拉伯数字对正文编号
 \mainmatter
 
 % 正文内容
 \input{tex/intro}
-\input{tex/floats}
-\input{tex/math_and_citations}
+\input{tex/related_work}
+\input{tex/case_study}
+\input{tex/design}
+\input{tex/evaluation}
 \input{tex/summary}
-
-% 使用英文字母对附录编号
-\appendix
-
-% 附录内容，本科学位论文可以用翻译的文献替代。
-\input{tex/app_maxwell_equations}
-\input{tex/app_flow_chart}
 
 % 文后无编号部分
 \backmatter
 
 % 参考资料
 \printbibliography[heading=bibintoc]
-
-% 用于盲审的论文需隐去致谢、发表论文、参与项目、申请专利、简历
-
-% 致谢
-\input{tex/acknowledgements}
-
-% 发表论文、参与项目、申请专利、简历
-% 盲审论文中，发表学术论文及参与科研情况等仅以第几作者注明即可，不要出现作者或他人姓名
-\input{tex/publications}
-\input{tex/projects}
-\input{tex/patents}
-\input{tex/resume}
-
-% 中文学士学位论文要求在最后有一个英文大摘要，单独编页码，英文学士学位论文不需要
-\input{tex/end_english_abstract}
 
 \end{document}

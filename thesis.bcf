@@ -2470,32 +2470,30 @@
     <bcf:datasource type="file" datatype="bibtex">bib/thesis.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
-    <bcf:citekey order="1">he1999</bcf:citekey>
-    <bcf:citekey order="2">he1999</bcf:citekey>
+    <bcf:citekey order="1">Meta_CN</bcf:citekey>
+    <bcf:citekey order="1">chen2007act</bcf:citekey>
+    <bcf:citekey order="1">DPMG</bcf:citekey>
+    <bcf:citekey order="2">JohnD</bcf:citekey>
+    <bcf:citekey order="2">zhubajie</bcf:citekey>
+    <bcf:citekey order="2">IEEE-1363</bcf:citekey>
     <bcf:citekey order="3">Meta_CN</bcf:citekey>
-    <bcf:citekey order="3">chen2007act</bcf:citekey>
-    <bcf:citekey order="3">DPMG</bcf:citekey>
-    <bcf:citekey order="4">JohnD</bcf:citekey>
-    <bcf:citekey order="4">zhubajie</bcf:citekey>
-    <bcf:citekey order="4">IEEE-1363</bcf:citekey>
-    <bcf:citekey order="5">Meta_CN</bcf:citekey>
-    <bcf:citekey order="5">JohnD</bcf:citekey>
-    <bcf:citekey order="5">IEEE-1363</bcf:citekey>
-    <bcf:citekey order="6">chen2007act</bcf:citekey>
-    <bcf:citekey order="6">chen2007ewi</bcf:citekey>
-    <bcf:citekey order="7">DPMG</bcf:citekey>
-    <bcf:citekey order="7">kocher99</bcf:citekey>
-    <bcf:citekey order="7">cnproceed</bcf:citekey>
-    <bcf:citekey order="8">zhubajie</bcf:citekey>
-    <bcf:citekey order="8">metamori2004</bcf:citekey>
-    <bcf:citekey order="9">shaheshang</bcf:citekey>
-    <bcf:citekey order="9">FistSystem01</bcf:citekey>
-    <bcf:citekey order="9">bai2008</bcf:citekey>
-    <bcf:citekey order="10">IEEE-1363</bcf:citekey>
-    <bcf:citekey order="11">NPB2</bcf:citekey>
-    <bcf:citekey order="12">xiaoyu2001</bcf:citekey>
-    <bcf:citekey order="12">CHRISTINE1998</bcf:citekey>
-    <bcf:citekey order="13">RManual</bcf:citekey>
+    <bcf:citekey order="3">JohnD</bcf:citekey>
+    <bcf:citekey order="3">IEEE-1363</bcf:citekey>
+    <bcf:citekey order="4">chen2007act</bcf:citekey>
+    <bcf:citekey order="4">chen2007ewi</bcf:citekey>
+    <bcf:citekey order="5">DPMG</bcf:citekey>
+    <bcf:citekey order="5">kocher99</bcf:citekey>
+    <bcf:citekey order="5">cnproceed</bcf:citekey>
+    <bcf:citekey order="6">zhubajie</bcf:citekey>
+    <bcf:citekey order="6">metamori2004</bcf:citekey>
+    <bcf:citekey order="7">shaheshang</bcf:citekey>
+    <bcf:citekey order="7">FistSystem01</bcf:citekey>
+    <bcf:citekey order="7">bai2008</bcf:citekey>
+    <bcf:citekey order="8">IEEE-1363</bcf:citekey>
+    <bcf:citekey order="9">NPB2</bcf:citekey>
+    <bcf:citekey order="10">xiaoyu2001</bcf:citekey>
+    <bcf:citekey order="10">CHRISTINE1998</bcf:citekey>
+    <bcf:citekey order="11">RManual</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">
