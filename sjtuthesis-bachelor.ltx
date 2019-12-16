@@ -37,7 +37,7 @@
 \sjtu@def@label{majorChi}{专业}
 \sjtu@def@label{departmentChi}{学院(系)}
 \ifsjtu@degree@course
-  \sjtu@def@label{thesiscat}{课程论文}
+  \sjtu@def@label{thesiscat}{计算机系统原理课程论文}
   \def\sjtu@label@thesistype{\sjtu@label@thesiscat}
   \sjtu@def@label{subjectChi}{\sjtu@label@thesiscat}
   \sjtu@def@label{subjectEng}{Course Paper}
@@ -197,7 +197,7 @@
     \begingroup
       \zihao{2}
       \begin{tabular}{c}
-        \begin{minipage}[t]{280pt}
+        \begin{minipage}[t]{380pt}
           \zihao{-2}
           \begin{center}
             \sjtu@value@title
@@ -210,17 +210,11 @@
       \zihao{3}
       \def\arraystretch{1.1}
       \begin{tabular}
-        {>{\begin{CJKfilltwosides}{4\ccwd}}r<{\end{CJKfilltwosides}}@{：}c}
-        \sjtu@label@authorChi        & \sjtu@value@author      \\ \cline{2-2}
-        \sjtu@label@studentidChi     & \makebox[180pt]{\sjtu@value@studentid} \\
-          \cline{2-2}
-        \ifsjtu@degree@course
-          \sjtu@label@coursenameChi  & \sjtu@value@coursename  \\ \cline{2-2}
-        \else
-          \sjtu@label@majorChi       & \sjtu@value@major       \\ \cline{2-2}
-        \fi
-        \sjtu@label@supervisorChi    & \sjtu@value@supervisor  \\ \cline{2-2}
-        \sjtu@label@departmentChi    & \sjtu@value@department  \\ \cline{2-2}
+        {c}
+        \sjtu@value@author      \\ 
+        \sjtu@value@studentid \\
+        \sjtu@value@supervisor  \\ 
+        \sjtu@value@department  \\ 
       \end{tabular}
     \endgroup
     \vskip 40bp
