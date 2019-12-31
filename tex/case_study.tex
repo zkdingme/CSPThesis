@@ -29,14 +29,14 @@ GC执行缓慢的一个关键原因是大数据系统中的对象特征不匹配
 \subsection{设计与实现}
 \begin{figure}[h]
     \centering
-    \includegraphics[width=12cm,height=7cm]{figure/layout.png}
+    \includegraphics[width=12cm,height=12cm]{figure/layout.png}
     \caption{
         region的一个例子：(a)一个简单的程序被多个线程执行的过程，(b)对应产生的内存域结构
     }
     \label{img3}
 \end{figure}
 Yak的高层想法是基于明确区分的控制路径和数据路径，把堆分成一个小的控制空间(CS)和一个更大的数据空间(DS)， 并使用不同的机制来管理这些空间。控制空间又被划分为新生代、老生代，采用传统的分代内存管理方法；数据空间则由多个内存域（region）组成，采用基于内存域的内存管理方法。
-Yak提出以下两个主要设计问题以及解决方案,如图\ref{img3}。
+_
 
 {\bfseries 问题1：何时创建和释放内存域？}
 
@@ -77,4 +77,73 @@ Yak在Oracle的JVM OpenJDK 8 (build 25.0-b70)中实现。除了基于时域的�
 
 
 \section{局限性}
-TODO
+
+
+\subsection{写障碍瓶颈}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm,height=7cm]{figure/algorithm1.jpg}
+    \caption{
+        算法1
+    }
+    \label{algorithm1}
+\end{figure}
+Yak需要有效地跟踪所有内存域/空间之间的引用。Yak通过三个步骤实现跟踪。首先,Yak将4字节字段（re）添加到每个对象的头部空间来记录对象所属的内存域信息。对象重新分配后,其头部字段更新为相应的内存域ID。CS用一个特殊的ID来表示。然后，Yak修改写障碍(例如，一小段代码增加引用a.f=b，会被写屏障捕获)来检测和记录基于堆的内存域/空间引用，修改后的算法如\ref{algorithm1}所示。
+
+当对象a新增对对象b的引用，这个引用会被写障碍捕获，将引用关系存储到b所属内存域的记忆集（remember set）中去。
+
+最后，当一个时域结束，Yak通过记忆集来追踪存活对象。
+
+Yak通过写障碍来帮助追踪内存域/空间之间的引用，写障碍本身增加了开销。为了了解写屏障的开销,作者手动修改了GraphChi的执行引擎，强迫载荷滑动碎片和执行更新线程执行写障碍。这对线程序列化产生影响,使程序顺序化。对于GraphChi的三个项目,突变时间(例如non-pause时间)总体增长了24.5\%，这表明写障碍是主要的瓶颈.
+
+现有的GC都通过手工编写/优化汇编代码来实现写障碍。Yak还没有相关的优化，我们希望能够通过优化汇编代码来降低写障碍的开销。
+
+
+\subsection{适用性局限}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm,height=7cm]{figure/footprint1.jpg}
+    \caption{
+        GraphChi执行期间的内存足迹，横轴为执行时间(GC消耗73\%的运行时间)。(a)中的每个点表示一次GC后对内存的测量，(b)中每条线显示每次GC回收内存数量；垂直虚线表示时域界限。
+    }
+    \label{footprint1}
+\end{figure}
+
+Yak性能好坏，很大程度上取决于大数据框架的对象特征与假设中时域特征的契合程度，以下是GraphChi程序的运行足迹。
+
+在GraphChi实验中,GC占据73\%的运行时间。每个时域持续约20秒（虚线表示）。如\ref{footprint1}所示。我们可以观察到时域结束点和内存下降存在明显的相关性。在每个时域执行期间,GC运行但只能回收很少的内存，是一种资源的浪费 (\ref{footprint1}(b))。
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm,height=7cm]{figure/evaluation1.jpg}
+    \caption{
+        Yak与Parallel Scavenge 在GraphChi不同程序执行时间的对比。堆内存分配分别为6GB和8GB。
+    }
+    \label{evaluation1}
+\end{figure}
+
+因为GraphChi对象具有强烈的时域特征，Yak在GraphChi上性能优势明显，如\ref{evaluation1}，对比Parallel Scavenge，Yak平均执行时间降低15\%。
+
+作者在三种大数据框架——Hyracks、Hadoop、GraphChi都进行了实验，获得了显著的性能提升。
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm,height=7cm]{figure/evaluation2.png}
+    \caption{
+        Spark执行LR期间的内存足迹，横轴为执行时间，(a)中的每个点表示一次GC后对内存的测量。
+    }
+    \label{evaluation2}
+\end{figure}
+但是， Yak对时域（region）的粗粒度划分导致Yak适用的局限性，只有严格满足对象时域特征的数据框架才能较好地发挥Yak优势，epoch假设不适用于Spark等内存计算系统。Spark LR执行的过程中，每一次GC均会回收较多的无用数据，\ref{evaluation2}是在spark中执行LR（Line Regression）内存的足迹,Yak对时域（region）的粗粒度划分导致Yak适用的局限性，只有严格满足对象时域特征的数据框架才能较好地发挥Yak优势，epoch假设不适用于Spark等内存计算系统。Spark的内存足迹没有显示出明显的时域界限，对象不满足严格的时域特征，Yak的内存回收方式不合适。
+
+Yak粗粒度的时域划分导致系统性能与大数据框架中对象epoch特征紧密相关，当大数据框架中的对象epoch特征不明显时，Yak性能下降。
+
+针对以上的缺陷，我们设想添加额外的、定义良好的细粒度时域来改善性能。
+
+\subsection{低并行性}
+
+Yak没有实现并行的原因就是在遇到多目的地问题时，必须严格按照拓扑排序迁移，所以整个迁移过程必须是串行的。
+
+改进的思路是，我们可以在迁移前先进行完整的可达性分析，对含有相同对象的可达路径进行聚类，形成多个GC Task。Task内部可能存在多目的地问题，因此仍旧需要按照拓扑排序串行执行；而两个Task之间不存在交集，因此可以并行地执行对象迁移和引用更新，这样就可以提供一定的并行度，进一步优化GC性能。具体优化方案将在4讲解。
+
