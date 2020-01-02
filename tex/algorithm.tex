@@ -1,0 +1,99 @@
+\begin{algorithm}
+    \caption{Closure computation.}%Algorithm 3:Closure computation.
+    %\LinesNumbered %要求显示行号
+    \KwIn{Remember Set $rs$ of Region $r$}%输入参数
+    %\KwOut{output result}%输出
+    % some description\; %\;用于换行
+   % \begin{algorithmic}
+    
+    \If{The remember set $rs$ of $r$ is NOT empty}{\Delta
+    　　\ForEach{ Escaping root $O_b$ $\in$ $rs$ }{
+    　　\ForEach{Reference addr $\xrightarrow{r'}$ ADDR($O_b$) in rs}{
+    　　promote[$O_b$] ← JOIN (r′, promote[$O_b$])
+    }
+    }
+    
+    Initialize map<int,set> tasks
+    
+    \ForEach{Escaping root $O_b$ in promote[$O_b$]}{
+    　　
+    Region tgt ← promote[$O_b$]
+    Initialize queue gray with {Ob}
+    
+    Initialize task t\_new with {Ob}
+    \While{gray is NOT empty}{
+    Object $O$ ← DEQUEUE($gray$)
+    
+    t\_new.add(O)
+    
+    bool isTaskIncluded=false
+    
+    \ForEach{task t in tasks}{
+    
+    \If{t.contain(O)}{
+    
+    JOIN(t,t\_new)
+    
+    t\_new =t
+    
+    isTaskIncluded=true
+    
+    break
+    }
+    }
+    \If{!isTaskIncluded}{
+    tasks[GET\_NEW\_TASK\_ID()]=new\_t
+    }
+    }
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    \ForEach{task t in tasks}{
+    \ForEach{Escaping root $O_b$ in topological order of task t}{
+    　　
+    Region tgt ← promote[$O_b$]
+    Initialize queue gray with {Ob}
+    \While{gray is NOT empty}{
+    Object $O$ ← DEQUEUE($gray$)
+    Write $tgt$ into the region field of $O$
+    Object $O^∗$ ←MOVE($O$, $tgt$)
+    Put a forward reference at ADDR($O$)
+    \ForEach{Reference addr $\xrightarrow{x}$ ADDR(O) in r’s rs}{
+    Write ADDR($O^∗$) into $addr$
+    　　\If{$x \not= tgt$}{
+    　　　　Add reference $addr$ $\xrightarrow{x}$ ADDR($O^∗$) into the remember set of region $tgt$
+    　　}
+    }
+    
+    
+    
+    \ForEach{Outgoing reference e of $O^∗$}{
+    　　
+    Object O′ ← TARGET($e$)
+    \If{O′ is a forward reference}{
+    Write the new address into $O^∗$
+    }
+    Region r′ ← REGION(O′)
+    \uIf { r′ = r } {
+    ENQUEUE(O′, gray);
+    } \ElseIf {$r′\not= tgt$}
+    {
+    Add reference ADDR($O$) $\xrightarrow{tgt}$ADDR($O′$) into the remember set of region $r′$
+    }
+    }
+    }
+    }
+    
+    }
+    }
+    
+    %\end{algorithmic}
+    \end{algorithm}
+   
