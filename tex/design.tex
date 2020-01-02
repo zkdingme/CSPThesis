@@ -30,21 +30,23 @@
 
 接下来，Yak通过远程栈标识存活的对象。为此，Yak需要将线程同步（第5行）。当远程线程暂停时，Yak扫描其栈变量，并返回一个被这些变量所引用的位于$r$中的对象的集合。每个这样的对象（远程对象）都要被明确标记为根，并在计算传递闭包之前（第11行）移动到CS（第10行）。
 
-没有线程会被恢复，直到完成闭包运算并将所有的存活对象移动到它们的目标区域。注意，即便远程线程的栈没有引用内存域中的任何对象，让其继续运行也是不安全的。
+直到完成闭包运算并将所有的存活对象移动到它们的目标区域，没有线程会被恢复。注意，即便远程线程的栈没有引用内存域$r$中的任何对象，让其继续运行也是不安全的。
 
 所有的存活对象都会被重新分配，然后释放整个内存域$r$，$r$占用的所有页会被重新放回空闲页表（第13行）。
 
 
 
-算法3显示了从所检测到的一组转移根上计算闭包的细节。由于所有其它线程都被暂停，所以闭包计算和对象迁移是同时完成的。闭包计算是基于记忆集$rs$和当前的释放区域$r$的。首先检查了记忆集$rs$(第1行)：如果$rs$为空，则该内存域不包含迁移对象，因此可以被安全地释放。否则，需标识所有的可达对象并重定位。
+算法4-1显示了从所检测到的一组转移根上计算闭包的细节。由于所有其它线程都被暂停，所以闭包计算和对象迁移是同时完成的。闭包计算是基于记忆集$rs$和当前的释放区域$r$的。首先检查了记忆集$rs$(第1行)：如果$rs$为空，则该内存域不包含迁移对象，因此可以被安全地释放。否则，需标识所有的可达对象并重定位。
 
 Yak先检查记忆集中的每个引用${addr}$  $O_{b}$的有效性，再基于半格运算计算出每个转移根$O_{b}$要移动到的目标内存域(第2-4行)，这些结果保存在map $promote$中。
 
 然后，按照所有转移根的目标区域的拓扑顺序来遍历这些转移根(第5行的循环)。对于每个转移根$O_b$,在当前区域内执行宽度优先遍历，以识别$O_b$可访问的转移对象的传递闭包，将其放入队列$gray$中。在遍历中(第8-23行)，计算每个(传递)转移对象的目标内存域并移动它们。
 
 \begin{algorithm}[H]
+
+    
     \nonumber
-    \caption{Algorithm 3:Closure computation.}%Algorithm 3:Closure computation.
+    \caption{Closure computation.}%Algorithm 3:Closure computation.
     \LinesNumbered %要求显示行号
     \KwIn{Remember Set $rs$ of Region $r$}%输入参数
     %\KwOut{output result}%输出
@@ -117,6 +119,7 @@ Yak先检查记忆集中的每个引用${addr}$  $O_{b}$的有效性，再基于
     
     　　}
     \nonumber
+    \label{a31}
     \end{algorithm}
 
 \subsection{更新记忆集并移动对象}
@@ -127,7 +130,7 @@ Yak先检查记忆集中的每个引用${addr}$  $O_{b}$的有效性，再基于
 
 \textbf{(2)来自其它区域的对象}\ 对这些对象的引用必须被记录在$r$的记忆集中。因此，可以在记忆集中发现所有对$O$的内存域间引用，并用新地址$O^{'}$更新每个这样的引用源（第14行）。由于$O^{*}$属于新内存域$tgt$，最初进入内存域$r$的引用现在会进入内存域$tgt$内。如果包含这样引用的内存域不是$tgt$，则该引用需被明确添加到${tgt}$的记忆集合中(第16行)。
 
-将$O$移动到内存域${tgt}$也许会导致新的内存域间/空间引用(第24-25行)。比如，如果对象$O^{*}$的目标域$r^{'}$不是$tgt$ (即$O^{'}$已经被其它转移根访问过了)，需要在$r^{'}$的记忆集中添加新的条目 ${ADDR(}^{*})$ \rightarrow{${tgt}$} $O^{'}$。
+将$O$移动到内存域${tgt}$也许会导致新的内存域间/空间引用(第24-25行)。比如，如果对象$O^{*}$的目标域$r^{'}$不是$tgt$ (即$O^{'}$已经被其它转移根访问过了)，需要在$r^{'}$的记忆集中添加新的条目 ${ADDR}$ $\xrightarrow{x}$ $O^{*}$。
 
 
 \begin{figure}[H]
@@ -144,7 +147,7 @@ Yak先检查记忆集中的每个引用${addr}$  $O_{b}$的有效性，再基于
 
 以上就是Yak进行GC详细过程。我们注意到，在GC过程中stop-the-world是不可避免的。一是在寻找根对象时，扫描远程堆，通过“stop-the-world”保证线程安全，避免“危险对象移动”和“晃动对象”问题。二是在迁移对象时，避免了在其他线程正在访问将迁移对象的传递闭包，导致不完全闭包问题和当其他行程运行时，并发地移动对象，引起数据竞争问题。
 
-stop-the-world意味着从应用中停下来并进入到GC执行过程中去。一旦Stop-the-world发生，除了GC所需的线程外，其他线程都将停止工作，中断了的线程直到GC任务结束才继续它们的任务。GC调优通常就是为了改善stop-the-world的时间，我们希望能通过实现迁移对象这个过程的并行，降低迁移对象的时间，可以降低stop-the-world的时间，从而提高整个系统的性能。
+stop-the-world意味着从应用中停下来并进入到GC执行过程中去。一旦stop-the-world发生，除了GC所需的线程外，其他线程都将停止工作，中断了的线程直到GC任务结束才继续它们的任务。GC调优通常就是为了改善stop-the-world的时间，我们希望能通过实现迁移对象这个过程的并行，降低迁移对象的时间，可以降低stop-the-world的时间，从而提高整个系统的性能。
 
 
 \section{优化方案}
@@ -170,129 +173,12 @@ stop-the-world意味着从应用中停下来并进入到GC执行过程中去。�
 \end{figure}
 
 
-\begin{algorithm}[H]
-    
-    \caption{Algorithm 3:Closure computation.}%Algorithm 3:Closure computation.
-    \LinesNumbered %要求显示行号
-    \KwIn{Remember Set $rs$ of Region $r$}%输入参数
-    %\KwOut{output result}%输出
-   % some description\; %\;用于换行
-    \If{The remember set $rs$ of $r$ is NOT empty}{\Delta
-    　　\ForEach{ Escaping root $O_b$  $\in$ $rs$ }{
-    　　\ForEach{Reference addr $\xrightarrow{r'}$ ADDR($O_b$) in rs}{
-    　　promote[$O_b$] ← JOIN (r′, promote[$O_b$])
-    }
-    }
 
-    Initialize map<int,set> tasks
+\input{tex/algorithm}
 
-    \ForEach{Escaping root $O_b$ in promote[$O_b$]}{
-    　　
-        Region tgt ← promote[$O_b$]
-        
-        Initialize queue gray with {Ob}
+改进的算法在4-2，1-4行依然是基于半格运算计算出每个转移根$O_b$要移动到的目标内存域，把这些结果保存在map $promote$中。第5行初始化一个map<int,set> $tasks$，用来存储分配在不同task的对象，6-19行对含有相同对象的可达路径进行聚类，放入一个task中。task拥有唯一的taskID标识，最终所有可达对象唯一存储在所属于task中。tasks存储所有task对象。
 
-        Initialize task t\_new with {Ob}
-        
-        \While{gray is NOT empty}{
-        
-        Object $O$ ← DEQUEUE($gray$)
-
-        t\_new.add(O)
-
-        bool isTaskIncluded=false
-        
-
-        \ForEach{task t in tasks}{
-
-            
-            \If{t.contain(O)}{
-
-                JOIN(t,t\_new)
-
-                t\_new =t
-
-                isTaskIncluded=true
-
-                break
-            }
-            
-        }
-        
-        \If{!isTaskIncluded}{
-            tasks[GET\_NEW\_TASK\_ID()]=new\_t
-        }
-    
-}
-    }
-    
+20-32行是算法并行性的实现。因为两个Task之间不存在交集，所以对每个task $t$，都有单独线程负责执行。这样通过实现迁移对象这个过程的并行，降低迁移对象的时间，可以降低Stop-the-world的时间，从而提高整个系统的性能。
 
 
 
-
-
-    \ForEach{task t in tasks}{
-        \ForEach{Escaping root $O_b$ in topological order of task t}{
-    　　
-    Region tgt ← promote[$O_b$]
-    
-    Initialize queue gray with {Ob}
-    
-    \While{gray is NOT empty}{
-    
-    Object $O$ ← DEQUEUE($gray$)
-    
-    Write $tgt$ into the region field of $O$
-    
-    Object $O^∗$ ←MOVE($O$, $tgt$)
-    
-    Put a forward reference at ADDR($O$)
-    
-    \ForEach{Reference addr $\xrightarrow{x}$ ADDR(O) in r’s rs}{
-    
-    Write ADDR($O^∗$) into $addr$
-    
-    
-    　　\If{$x \not= tgt$}{
-    
-    　　　　Add reference $addr$ $\xrightarrow{x}$ ADDR($O^∗$) into the remember set of region $tgt$
-    
-    　　}
-    }
-    
-    \ForEach{Outgoing reference e of $O^∗$}{
-    　　
-    Object O′ ← TARGET($e$)
-    
-    \If{O′ is a forward reference}{
-    
-    Write the new address into $O^∗$
-    
-    }
-    
-    Region r′ ← REGION(O′)
-    
-    \uIf { r′ = r } {
-    
-    ENQUEUE(O′, gray);
-    
-    } \ElseIf {$r′\not= tgt$}
-    {
-    Add reference ADDR($O$) $\xrightarrow{tgt}$ADDR($O′$) into the remember set of region $r′$
-    
-    }
-    
-    
-    }
-    
-    }
-    
-    
-    }
-
-    }
- 
-
-    }
-    
-    \end{algorithm}
