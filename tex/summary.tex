@@ -1,3 +1,12 @@
 \chapter{总结}
-TODO
+本文对针对大数据场景的研究进行调研，发现高级语言虚拟机（JVM、CLR等）由于最初设计时并没有考虑大数据处理的特点，存在以下问题：
+\begin{enumerate}
+    \item GC时延较高
+    \item 以对象形式存储数据导致的Memory Bloat
+    \item Data shuffling开销较高
+    \item 多节点调度带来的开销较高
+\end{enumerate}
+
+此外，本文具体分析了GC收集器Yak的研究思路，并指出Yak的局限性：写障碍瓶颈、适用性局限和低并行性。
+最后，本文提出了一种Yak的优化方案，提高Yak的迁移并行性。
 
